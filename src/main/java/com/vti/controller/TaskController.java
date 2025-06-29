@@ -5,6 +5,7 @@ import com.vti.model.Task;
 import com.vti.model.User;
 import com.vti.repository.ProjectRepository;
 import com.vti.repository.UserRepository;
+import com.vti.service.AuditLogService;
 import com.vti.service.ProjectMemberService;
 import com.vti.service.TaskService;
 import org.springframework.http.ResponseEntity;
@@ -21,39 +22,58 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
+
     private final TaskService taskService;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final ProjectMemberService projectMemberService;
+    private final AuditLogService auditLogService;
 
     public TaskController(TaskService taskService,
                           UserRepository userRepository,
                           ProjectRepository projectRepository,
-                          ProjectMemberService projectMemberService) {
+                          ProjectMemberService projectMemberService,
+                          AuditLogService auditLogService) {
         this.taskService = taskService;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.projectMemberService = projectMemberService;
+        this.auditLogService = auditLogService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<Task> create(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<Task> create(@RequestBody Map<String, Object> request, Principal principal) {
         Task task = parseTaskFromRequest(request);
-        return ResponseEntity.ok(taskService.createTask(task));
+        Task created = taskService.createTask(task);
+
+        String desc = "Tạo task ID " + created.getId() + ": " + created.getName()
+                + " trong project ID " + created.getProject().getId();
+        auditLogService.log(principal.getName(), "CREATE", "Task", created.getId(), desc);
+
+        return ResponseEntity.ok(created);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Task> update(@PathVariable Integer id, @RequestBody Map<String, Object> request) {
+    public ResponseEntity<Task> update(@PathVariable Integer id, @RequestBody Map<String, Object> request, Principal principal) {
         Task task = parseTaskFromRequest(request);
-        return ResponseEntity.ok(taskService.updateTask(id, task));
+        Task updated = taskService.updateTask(id, task);
+
+        String desc = "Cập nhật task ID " + id + ": " + updated.getName();
+        auditLogService.log(principal.getName(), "UPDATE", "Task", id, desc);
+
+        return ResponseEntity.ok(updated);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable Integer id, Principal principal) {
         taskService.deleteTask(id);
+
+        String desc = "Xoá task ID " + id;
+        auditLogService.log(principal.getName(), "DELETE", "Task", id, desc);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -61,7 +81,6 @@ public class TaskController {
     public ResponseEntity<List<Task>> getByProject(@PathVariable Integer projectId, Principal principal) {
         User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-        // Nếu không phải admin thì chỉ xem được task trong project mình tham gia
         if (!user.getRole().equals(User.Role.ADMIN)) {
             boolean isInProject = projectMemberService.isUserInProject(projectId, user.getId());
             if (!isInProject) {
@@ -76,7 +95,12 @@ public class TaskController {
     public ResponseEntity<Task> updateStatus(@PathVariable Integer id,
                                              @RequestBody Task request,
                                              Principal principal) {
-        return ResponseEntity.ok(taskService.updateStatus(id, request.getStatus(), principal.getName()));
+        Task updated = taskService.updateStatus(id, request.getStatus(), principal.getName());
+
+        String desc = "Cập nhật trạng thái task ID " + id + " thành " + updated.getStatus();
+        auditLogService.log(principal.getName(), "STATUS_CHANGE", "Task", id, desc);
+
+        return ResponseEntity.ok(updated);
     }
 
     private Task parseTaskFromRequest(Map<String, Object> request) {
@@ -91,7 +115,7 @@ public class TaskController {
         Project project = projectRepository.findById(projectId).orElseThrow();
         Set<User> assignedUsers = assignedUserIds.stream()
                 .map(id -> userRepository.findById(id).orElseThrow())
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
         Task task = new Task();
         task.setName(name);
@@ -103,6 +127,4 @@ public class TaskController {
 
         return task;
     }
-
-
 }

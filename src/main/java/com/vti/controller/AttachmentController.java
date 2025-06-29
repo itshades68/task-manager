@@ -2,6 +2,7 @@ package com.vti.controller;
 
 import com.vti.model.Attachment;
 import com.vti.service.AttachmentService;
+import com.vti.service.AuditLogService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +17,11 @@ import java.util.List;
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
+    private final AuditLogService auditLogService;
 
-    public AttachmentController(AttachmentService attachmentService) {
+    public AttachmentController(AttachmentService attachmentService, AuditLogService auditLogService) {
         this.attachmentService = attachmentService;
+        this.auditLogService = auditLogService;
     }
 
     // Upload file
@@ -26,7 +29,12 @@ public class AttachmentController {
     public ResponseEntity<Attachment> upload(@PathVariable Integer taskId,
                                              @RequestParam("file") MultipartFile file,
                                              Principal principal) {
-        return ResponseEntity.ok(attachmentService.upload(taskId, file, principal.getName()));
+        Attachment attachment = attachmentService.upload(taskId, file, principal.getName());
+
+        String desc = "Upload file \"" + attachment.getFileName() + "\" vào task ID " + taskId;
+        auditLogService.log(principal.getName(), "CREATE", "Attachment", attachment.getId(), desc);
+
+        return ResponseEntity.ok(attachment);
     }
 
     // Danh sách file theo task
@@ -56,6 +64,10 @@ public class AttachmentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id, Principal principal) {
         attachmentService.deleteAttachment(id, principal.getName());
+
+        String desc = "Xoá file đính kèm ID " + id;
+        auditLogService.log(principal.getName(), "DELETE", "Attachment", id, desc);
+
         return ResponseEntity.noContent().build();
     }
 }

@@ -5,6 +5,7 @@ import com.vti.model.Task;
 import com.vti.model.User;
 import com.vti.repository.TaskRepository;
 import com.vti.repository.UserRepository;
+import com.vti.service.AuditLogService;
 import com.vti.service.ProgressLogService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,11 +21,16 @@ public class ProgressLogController {
     private final ProgressLogService progressLogService;
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
+    private final AuditLogService auditLogService;
 
-    public ProgressLogController(ProgressLogService progressLogService, UserRepository userRepository, TaskRepository taskRepository) {
+    public ProgressLogController(ProgressLogService progressLogService,
+                                 UserRepository userRepository,
+                                 TaskRepository taskRepository,
+                                 AuditLogService auditLogService) {
         this.progressLogService = progressLogService;
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
+        this.auditLogService = auditLogService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
@@ -48,6 +54,12 @@ public class ProgressLogController {
                 request.getPercent(),
                 request.getNote()
         );
+
+        String desc = "Cập nhật tiến độ task ID " + taskId + ": " +
+                      request.getPercent() + "% – \"" + request.getNote() + "\"";
+
+        auditLogService.log(principal.getName(), "CREATE", "ProgressLog", log.getId(), desc);
+
         return ResponseEntity.ok(log);
     }
 

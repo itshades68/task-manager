@@ -2,6 +2,7 @@ package com.vti.controller;
 
 import com.vti.model.Comment;
 import com.vti.model.CommentHistory;
+import com.vti.service.AuditLogService;
 import com.vti.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,17 +17,25 @@ import java.util.Map;
 public class CommentController {
 
 	private final CommentService commentService;
+	private final AuditLogService auditLogService;
 
-	public CommentController(CommentService commentService) {
+	public CommentController(CommentService commentService, AuditLogService auditLogService) {
 		this.commentService = commentService;
+		this.auditLogService = auditLogService;
 	}
 
 	// ✅ Thêm comment vào task (ai cũng dùng được)
 	@PostMapping("/task/{taskId}")
-	public ResponseEntity<Comment> createComment(@PathVariable Integer taskId, @RequestBody Map<String, String> request,
-			Principal principal) {
+	public ResponseEntity<Comment> createComment(@PathVariable Integer taskId,
+												 @RequestBody Map<String, String> request,
+												 Principal principal) {
 		String content = request.get("content");
-		return ResponseEntity.ok(commentService.createComment(taskId, content, principal.getName()));
+		Comment comment = commentService.createComment(taskId, content, principal.getName());
+
+		String desc = "Thêm comment vào task ID " + taskId + ": \"" + content + "\"";
+		auditLogService.log(principal.getName(), "CREATE", "Comment", comment.getId(), desc);
+
+		return ResponseEntity.ok(comment);
 	}
 
 	// ✅ Lấy tất cả comment của task (ai cũng dùng được)
@@ -40,15 +49,25 @@ public class CommentController {
 	@DeleteMapping("/{commentId}")
 	public ResponseEntity<Void> deleteComment(@PathVariable Integer commentId, Principal principal) {
 		commentService.deleteComment(commentId, principal.getName());
+
+		String desc = "Xoá comment ID " + commentId;
+		auditLogService.log(principal.getName(), "DELETE", "Comment", commentId, desc);
+
 		return ResponseEntity.noContent().build();
 	}
 
 	// ✅ ADMIN hoặc NGƯỜI TẠO được sửa comment
 	@PatchMapping("/{commentId}")
 	public ResponseEntity<Comment> updateComment(@PathVariable Integer commentId,
-			@RequestBody Map<String, String> request, Principal principal) {
+												 @RequestBody Map<String, String> request,
+												 Principal principal) {
 		String newContent = request.get("content");
-		return ResponseEntity.ok(commentService.updateComment(commentId, newContent, principal.getName()));
+		Comment updated = commentService.updateComment(commentId, newContent, principal.getName());
+
+		String desc = "Sửa comment ID " + commentId + ": \"" + newContent + "\"";
+		auditLogService.log(principal.getName(), "UPDATE", "Comment", commentId, desc);
+
+		return ResponseEntity.ok(updated);
 	}
 
 	@GetMapping("/{commentId}/history")
