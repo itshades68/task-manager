@@ -16,20 +16,26 @@ public class ProjectMemberService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public ProjectMemberService(ProjectMemberRepository projectMemberRepository,
-                                 ProjectRepository projectRepository,
-                                 UserRepository userRepository) {
-        this.projectMemberRepository = projectMemberRepository;
-        this.projectRepository = projectRepository;
-        this.userRepository = userRepository;
-    }
+    
 
-    public ProjectMember addMember(Integer projectId, Integer userId) {
+    public ProjectMemberService(ProjectMemberRepository projectMemberRepository, ProjectRepository projectRepository,
+			UserRepository userRepository, NotificationService notificationService) {
+		super();
+		this.projectMemberRepository = projectMemberRepository;
+		this.projectRepository = projectRepository;
+		this.userRepository = userRepository;
+		this.notificationService = notificationService;
+	}
+
+	public ProjectMember addMember(Integer projectId, Integer userId) {
         Project project = projectRepository.findById(projectId).orElseThrow();
         User user = userRepository.findById(userId).orElseThrow();
         ProjectMember member = new ProjectMember(project.getId(), user.getId());
+        notificationService.notifyProjectAssignment(user.getUsername(),projectId);
         return projectMemberRepository.save(member);
+        
     }
 
     public void removeMember(Integer projectId, Integer userId) {

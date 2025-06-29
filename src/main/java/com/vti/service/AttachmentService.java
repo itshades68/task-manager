@@ -24,14 +24,17 @@ public class AttachmentService {
     private final AttachmentRepository attachmentRepository;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final String uploadDir = "uploads";
 
     public AttachmentService(AttachmentRepository attachmentRepository,
                              TaskRepository taskRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             NotificationService notificationService) {
         this.attachmentRepository = attachmentRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public Attachment upload(Integer taskId, MultipartFile file, String username) {
@@ -52,7 +55,12 @@ public class AttachmentService {
             attachment.setFileName(file.getOriginalFilename());
             attachment.setFilePath(filePath);
 
-            return attachmentRepository.save(attachment);
+            Attachment savedAttachment = attachmentRepository.save(attachment);
+
+            // Trigger: Notify assigned users
+            notificationService.notifyAttachmentAdded(task, user);
+
+            return savedAttachment;
 
         } catch (IOException e) {
             throw new RuntimeException("File upload failed", e);

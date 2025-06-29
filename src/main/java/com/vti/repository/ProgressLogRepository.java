@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface ProgressLogRepository extends JpaRepository<ProgressLog, Integer> {
     List<ProgressLog> findByTask(Task task);
+    List<ProgressLog> findByTaskIdOrderByCreatedAtDesc(Integer taskId);
+    List<ProgressLog> findByUserIdOrderByCreatedAtDesc(Integer userId);
 }

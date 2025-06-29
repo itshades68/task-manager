@@ -22,15 +22,18 @@ public class CommentService {
     private final CommentHistoryRepository commentHistoryRepository;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public CommentService(CommentRepository commentRepository,
                           CommentHistoryRepository commentHistoryRepository,
                           TaskRepository taskRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.commentHistoryRepository = commentHistoryRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public Comment createComment(Integer taskId, String content, String username) {
@@ -43,7 +46,12 @@ public class CommentService {
         comment.setCreatedBy(user);
         comment.setCreatedAt(LocalDateTime.now());
 
-        return commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+
+        // ✅ Trigger 4 - Gửi noti khi có comment mới
+        notificationService.notifyCommentAdded(task, user);
+
+        return saved;
     }
 
     public List<Comment> getCommentsByTask(Integer taskId) {
@@ -84,7 +92,7 @@ public class CommentService {
         comment.setContent(newContent);
         return commentRepository.save(comment);
     }
-    
+
     public List<CommentHistory> getCommentHistory(Integer commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow();
         return commentHistoryRepository.findByCommentOrderByEditedAtDesc(comment);
