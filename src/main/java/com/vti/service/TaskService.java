@@ -1,18 +1,26 @@
 package com.vti.service;
 
+import com.vti.model.Comment;
 import com.vti.model.Project;
 import com.vti.model.Task;
 import com.vti.model.User;
+import com.vti.repository.AttachmentRepository;
+import com.vti.repository.CommentHistoryRepository;
+import com.vti.repository.CommentRepository;
 import com.vti.repository.ProjectRepository;
 import com.vti.repository.TaskRepository;
 import com.vti.repository.UserRepository;
 import com.vti.service.ProjectMemberService;
+
+import jakarta.transaction.Transactional;
+
 import com.vti.service.NotificationService;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
@@ -21,17 +29,26 @@ public class TaskService {
     private final UserRepository userRepository;
     private final ProjectMemberService projectMemberService;
     private final NotificationService notificationService;
+    private final CommentRepository commentRepository;
+    private final AttachmentRepository attachmentRepository;
+    private final CommentHistoryRepository commentHistoryRepository;
 
     public TaskService(TaskRepository taskRepository,
                        ProjectRepository projectRepository,
                        UserRepository userRepository,
                        ProjectMemberService projectMemberService,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       CommentRepository commentRepository,
+                       AttachmentRepository attachmentRepository,
+                       CommentHistoryRepository commentHistoryRepository) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.projectMemberService = projectMemberService;
         this.notificationService = notificationService;
+        this.commentRepository = commentRepository;
+        this.attachmentRepository = attachmentRepository;
+        this.commentHistoryRepository = commentHistoryRepository;
     }
 
     public Task createTask(Task task) {
@@ -70,7 +87,18 @@ public class TaskService {
         return savedTask;
     }
 
+    @Transactional
     public void deleteTask(Integer taskId) {
+    	
+    	List<Comment> comments = commentRepository.findByTaskId(taskId);
+        for (Comment comment : comments) {
+            commentHistoryRepository.deleteByCommentId(comment.getId());
+        }
+        // Xoá comment trước
+        commentRepository.deleteByTaskId(taskId);
+        attachmentRepository.deleteByTaskId(taskId);
+
+        // Sau đó xoá task
         taskRepository.deleteById(taskId);
     }
 
@@ -98,5 +126,27 @@ public class TaskService {
             notificationService.notifyTaskStatusChanged(savedTask, oldStatus);
         }
         return savedTask;
+    }
+    
+    public Task getTaskById(Integer id) {
+        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task không tồn tại"));
+        return task;
+    }
+    @Transactional
+    public Task assignUsers(Integer taskId, List<Integer> userIds) {
+        Task task = taskRepository.findById(taskId).orElseThrow();
+
+        Set<User> users = userIds.stream()
+                .map(id -> userRepository.findById(id).orElseThrow())
+                .collect(Collectors.toSet());
+
+        task.setAssignedUsers(users);
+
+        // Gửi thông báo
+        List<String> usernames = users.stream().map(User::getUsername).toList();
+        notificationService.notifyTaskAssignment(task.getId(), usernames);
+        
+
+        return taskRepository.save(task);
     }
 }

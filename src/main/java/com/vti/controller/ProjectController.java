@@ -25,9 +25,19 @@ public class ProjectController {
         this.userRepository = userRepository;
         this.auditLogService = auditLogService;
     }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Project>> getAll() {
+        return ResponseEntity.ok(projectService.getAllProjects());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Project> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(projectService.getProjectById(id));
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<Project> create(@RequestBody Project project, Principal principal) {
         User admin = userRepository.findByUsername(principal.getName()).orElseThrow();
         project.setCreatedBy(admin);
@@ -61,13 +71,5 @@ public class ProjectController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<Project>> getAll() {
-        return ResponseEntity.ok(projectService.getAllProjects());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Project> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(projectService.getProjectById(id));
-    }
+    
 }

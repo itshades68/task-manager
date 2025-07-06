@@ -8,4 +8,8 @@ import java.util.List;
 
 public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> findByTaskOrderByCreatedAtDesc(Task task);
+
+	void deleteByTaskId(Integer taskId);
+
+	List<Comment> findByTaskId(Integer taskId);
 }

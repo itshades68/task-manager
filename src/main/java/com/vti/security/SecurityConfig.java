@@ -30,7 +30,19 @@ public class SecurityConfig {
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeHttpRequests()
-            .requestMatchers("/auth/login").permitAll()
+            .requestMatchers("/auth/login",
+                    "/auth/v2/register",
+                    "/login.html",
+                    "/projects.html",
+                    "/tasks.html",
+                    "/task_detail.html",
+                    "/dashboard.html",
+                    "/create_task.html",
+                    "/js/**",
+                    "/css/**",
+                    "/assets/**",
+                    "/favicon.ico",
+                    "/attachments/download/**").permitAll()
             .anyRequest().authenticated();
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

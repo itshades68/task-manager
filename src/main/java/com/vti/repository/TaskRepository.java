@@ -6,6 +6,7 @@ import com.vti.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByProject(Project project);
@@ -15,4 +16,8 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
 
     // Tìm task theo project và user được phân công
     List<Task> findByProjectAndAssignedUsersContaining(Project project, User user);
+    
+    Optional<Task> findById(Integer id);
+
+	List<Task> findByProjectId(Integer projectId);
 }

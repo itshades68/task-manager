@@ -7,11 +7,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "`user`")
 public class User {
 	@Id

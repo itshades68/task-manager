@@ -3,10 +3,9 @@ package com.vti.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
 @Table(name = "`project`")
 public class Project {
     @Id
@@ -25,7 +24,7 @@ public class Project {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
-
+    
 	public Project() {
 		super();
 	}

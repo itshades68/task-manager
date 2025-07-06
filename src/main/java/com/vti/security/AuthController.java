@@ -41,11 +41,20 @@ public class AuthController {
 		String token = jwtTokenProvider.generateToken(username);
 		User user = userRepository.findByUsername(username).orElseThrow();
 
-		return ResponseEntity.ok(Map.of("token", token, "role", user.getRole().name()));
+		return ResponseEntity.ok(Map.of(
+			    "token", token,
+			    "user", Map.of(
+			        "id", user.getId(),
+			        "username", user.getUsername(),
+			        "fullName", user.getFullName(),
+			        "role", user.getRole().name()
+			    )
+			));
+
 
 	}
 	@PreAuthorize("hasRole('ADMIN')")
-	@PostMapping("/v2/register")
+	@PostMapping("/register")
 	public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
 	    String username = request.get("username");
 	    String password = request.get("password");

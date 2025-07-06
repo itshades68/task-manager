@@ -3,6 +3,7 @@ package com.vti.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -28,6 +29,9 @@ public class Task {
 
     private LocalDate deadline;
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attachment> attachments;
+    
     @ManyToMany
     @JoinTable(
         name = "task_assignment",
@@ -38,6 +42,17 @@ public class Task {
 
     public enum Status {
         TODO, IN_PROGRESS, DONE
+    }
+    
+    @Transient
+    private int tempProgress;
+
+    public int getTempProgress() {
+        return tempProgress;
+    }
+
+    public void setTempProgress(int tempProgress) {
+        this.tempProgress = tempProgress;
     }
 
     // Constructors

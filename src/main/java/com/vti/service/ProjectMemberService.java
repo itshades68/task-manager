@@ -7,6 +7,9 @@ import com.vti.model.User;
 import com.vti.repository.ProjectMemberRepository;
 import com.vti.repository.ProjectRepository;
 import com.vti.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,6 +40,18 @@ public class ProjectMemberService {
         return projectMemberRepository.save(member);
         
     }
+	
+	@Transactional
+	public void updateMembers(Integer projectId, List<Integer> userIds) {
+	    // Xoá hết cũ
+	    projectMemberRepository.deleteByProjectId(projectId);
+
+	    // Thêm lại theo danh sách mới
+	    for (Integer userId : userIds) {
+	        ProjectMember member = new ProjectMember(projectId, userId);
+	        projectMemberRepository.save(member);
+	    }
+	}
 
     public void removeMember(Integer projectId, Integer userId) {
         Project project = projectRepository.findById(projectId).orElseThrow();

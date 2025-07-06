@@ -3,10 +3,9 @@ package com.vti.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
 @Table(name = "`attachment`")
 public class Attachment {
     @Id

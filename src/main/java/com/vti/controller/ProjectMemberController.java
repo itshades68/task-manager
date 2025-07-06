@@ -45,6 +45,27 @@ public class ProjectMemberController {
 
         return ResponseEntity.ok(member);
     }
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{projectId}")
+    public ResponseEntity<?> updateProjectMembers(
+            @PathVariable Integer projectId,
+            @RequestBody Map<String, List<Integer>> body,
+            Principal principal
+    ) {
+        List<Integer> userIds = body.get("userIds");
+
+        if (userIds == null) {
+            return ResponseEntity.badRequest().body("Danh sách userIds không được để trống");
+        }
+
+        projectMemberService.updateMembers(projectId, userIds);
+
+        String desc = "Cập nhật thành viên cho project ID " + projectId;
+        auditLogService.log(principal.getName(), "UPDATE", "ProjectMember", null, desc);
+
+        return ResponseEntity.ok().build();
+    }
 
     // ADMIN xoá member khỏi project
     @PreAuthorize("hasRole('ADMIN')")

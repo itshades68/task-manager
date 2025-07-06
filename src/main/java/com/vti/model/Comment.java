@@ -5,11 +5,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "`comment`")
 public class Comment {
 	@Id
