@@ -14,11 +14,14 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ProjectMemberRepository extends JpaRepository<ProjectMember, ProjectMemberId> {
-    List<ProjectMember> findByProjectId(Integer projectId);
-    List<ProjectMember> findByUserId(Integer userId);
-    boolean existsByProjectIdAndUserId(Integer projectId, Integer userId);
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM ProjectMember pm WHERE pm.id.projectId = :projectId")
-    void deleteByProjectId(@Param("projectId") Integer projectId);
+	List<ProjectMember> findByProjectId(Integer projectId);
+
+	List<ProjectMember> findByUserId(Integer userId);
+
+	boolean existsByProjectIdAndUserId(Integer projectId, Integer userId);
+
+	@Modifying
+	@Transactional
+	@Query("DELETE FROM ProjectMember pm WHERE pm.id.projectId = :projectId")
+	void deleteByProjectId(@Param("projectId") Integer projectId);
 }

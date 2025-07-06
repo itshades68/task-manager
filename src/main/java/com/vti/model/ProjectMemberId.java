@@ -5,9 +5,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class ProjectMemberId implements Serializable {
-    private Integer projectId;
-    private Integer userId;
-    
+	private Integer projectId;
+	private Integer userId;
+
 	public ProjectMemberId() {
 		super();
 	}
@@ -33,18 +33,19 @@ public class ProjectMemberId implements Serializable {
 	public void setUserId(Integer userId) {
 		this.userId = userId;
 	}
-    
-	 @Override
-	    public boolean equals(Object o) {
-	        if (this == o) return true;
-	        if (!(o instanceof ProjectMemberId that)) return false;
-	        return Objects.equals(projectId, that.projectId) &&
-	               Objects.equals(userId, that.userId);
-	    }
 
-	    @Override
-	    public int hashCode() {
-	        return Objects.hash(projectId, userId);
-	    }
-    
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof ProjectMemberId that))
+			return false;
+		return Objects.equals(projectId, that.projectId) && Objects.equals(userId, that.userId);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(projectId, userId);
+	}
+
 }

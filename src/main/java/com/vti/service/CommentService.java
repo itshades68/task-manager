@@ -18,83 +18,80 @@ import java.util.List;
 @Service
 public class CommentService {
 
-    private final CommentRepository commentRepository;
-    private final CommentHistoryRepository commentHistoryRepository;
-    private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
-    private final NotificationService notificationService;
+	private final CommentRepository commentRepository;
+	private final CommentHistoryRepository commentHistoryRepository;
+	private final TaskRepository taskRepository;
+	private final UserRepository userRepository;
+	private final NotificationService notificationService;
 
-    public CommentService(CommentRepository commentRepository,
-                          CommentHistoryRepository commentHistoryRepository,
-                          TaskRepository taskRepository,
-                          UserRepository userRepository,
-                          NotificationService notificationService) {
-        this.commentRepository = commentRepository;
-        this.commentHistoryRepository = commentHistoryRepository;
-        this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
-        this.notificationService = notificationService;
-    }
+	public CommentService(CommentRepository commentRepository, CommentHistoryRepository commentHistoryRepository,
+			TaskRepository taskRepository, UserRepository userRepository, NotificationService notificationService) {
+		this.commentRepository = commentRepository;
+		this.commentHistoryRepository = commentHistoryRepository;
+		this.taskRepository = taskRepository;
+		this.userRepository = userRepository;
+		this.notificationService = notificationService;
+	}
 
-    public Comment createComment(Integer taskId, String content, String username) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
-        User user = userRepository.findByUsername(username).orElseThrow();
+	public Comment createComment(Integer taskId, String content, String username) {
+		Task task = taskRepository.findById(taskId).orElseThrow();
+		User user = userRepository.findByUsername(username).orElseThrow();
 
-        Comment comment = new Comment();
-        comment.setContent(content);
-        comment.setTask(task);
-        comment.setCreatedBy(user);
-        comment.setCreatedAt(LocalDateTime.now());
+		Comment comment = new Comment();
+		comment.setContent(content);
+		comment.setTask(task);
+		comment.setCreatedBy(user);
+		comment.setCreatedAt(LocalDateTime.now());
 
-        Comment saved = commentRepository.save(comment);
+		Comment saved = commentRepository.save(comment);
 
-        // ✅ Trigger 4 - Gửi noti khi có comment mới
-        notificationService.notifyCommentAdded(task, user);
+		// Trigger: Gửi noti khi có comment mới
+		notificationService.notifyCommentAdded(task, user);
 
-        return saved;
-    }
+		return saved;
+	}
 
-    public List<Comment> getCommentsByTask(Integer taskId) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
-        return commentRepository.findByTaskOrderByCreatedAtDesc(task);
-    }
+	public List<Comment> getCommentsByTask(Integer taskId) {
+		Task task = taskRepository.findById(taskId).orElseThrow();
+		return commentRepository.findByTaskOrderByCreatedAtDesc(task);
+	}
 
-    public void deleteComment(Integer commentId, String username) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow();
-        User user = userRepository.findByUsername(username).orElseThrow();
+	public void deleteComment(Integer commentId, String username) {
+		Comment comment = commentRepository.findById(commentId).orElseThrow();
+		User user = userRepository.findByUsername(username).orElseThrow();
 
-        if (user.getRole() != User.Role.ADMIN) {
-            throw new AccessDeniedException("Chỉ admin mới có quyền xoá comment.");
-        }
+		if (user.getRole() != User.Role.ADMIN) {
+			throw new AccessDeniedException("Chỉ admin mới có quyền xoá comment.");
+		}
 
-        commentRepository.delete(comment);
-    }
+		commentRepository.delete(comment);
+	}
 
-    @Transactional
-    public Comment updateComment(Integer commentId, String newContent, String username) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow();
-        User user = userRepository.findByUsername(username).orElseThrow();
+	@Transactional
+	public Comment updateComment(Integer commentId, String newContent, String username) {
+		Comment comment = commentRepository.findById(commentId).orElseThrow();
+		User user = userRepository.findByUsername(username).orElseThrow();
 
-        boolean isOwner = comment.getCreatedBy().getUsername().equals(username);
-        boolean isAdmin = user.getRole() == User.Role.ADMIN;
+		boolean isOwner = comment.getCreatedBy().getUsername().equals(username);
+		boolean isAdmin = user.getRole() == User.Role.ADMIN;
 
-        if (!isOwner && !isAdmin) {
-            throw new AccessDeniedException("Bạn không có quyền sửa comment này.");
-        }
+		if (!isOwner && !isAdmin) {
+			throw new AccessDeniedException("Bạn không có quyền sửa comment này.");
+		}
 
-        // Lưu lịch sử trước khi sửa
-        CommentHistory history = new CommentHistory();
-        history.setComment(comment);
-        history.setPreviousContent(comment.getContent());
-        history.setEditedAt(LocalDateTime.now());
-        commentHistoryRepository.save(history);
+		// Lưu lịch sử trước khi sửa
+		CommentHistory history = new CommentHistory();
+		history.setComment(comment);
+		history.setPreviousContent(comment.getContent());
+		history.setEditedAt(LocalDateTime.now());
+		commentHistoryRepository.save(history);
 
-        comment.setContent(newContent);
-        return commentRepository.save(comment);
-    }
+		comment.setContent(newContent);
+		return commentRepository.save(comment);
+	}
 
-    public List<CommentHistory> getCommentHistory(Integer commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow();
-        return commentHistoryRepository.findByCommentOrderByEditedAtDesc(comment);
-    }
+	public List<CommentHistory> getCommentHistory(Integer commentId) {
+		Comment comment = commentRepository.findById(commentId).orElseThrow();
+		return commentHistoryRepository.findByCommentOrderByEditedAtDesc(comment);
+	}
 }

@@ -20,7 +20,6 @@ public class NotificationController {
 		this.notificationService = notificationService;
 	}
 
-	// ✅ Admin gửi noti cho toàn bộ user
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/broadcast")
 	public ResponseEntity<Void> broadcastNotification(@RequestBody Map<String, String> request) {
@@ -29,13 +28,11 @@ public class NotificationController {
 		return ResponseEntity.ok().build();
 	}
 
-	// ✅ Lấy danh sách notification theo user (chính mình)
 	@GetMapping
 	public ResponseEntity<List<Notification>> getMyNotifications(Principal principal) {
 		return ResponseEntity.ok(notificationService.getNotifications(principal.getName()));
 	}
 
-	// ✅ Đánh dấu là đã đọc
 	@PatchMapping("/{id}/read")
 	public ResponseEntity<Void> markAsRead(@PathVariable Integer id, Principal principal) {
 		notificationService.markAsRead(id, principal.getName());

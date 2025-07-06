@@ -27,7 +27,7 @@ public class NotificationService {
 		this.taskRepository = taskRepository;
 	}
 
-	// ✅ Tạo noti cho 1 user
+	// Tạo noti cho 1 user
 	public void createNotification(User user, String message) {
 		Notification noti = new Notification();
 		noti.setUser(user);
@@ -37,7 +37,7 @@ public class NotificationService {
 		notificationRepository.save(noti);
 	}
 
-	// ✅ Tạo noti cho nhiều user
+	// Tạo noti cho nhiều user
 	public void createNotifications(Collection<User> users, String message) {
 		List<Notification> notifications = new ArrayList<>();
 		for (User user : users) {
@@ -51,13 +51,13 @@ public class NotificationService {
 		notificationRepository.saveAll(notifications);
 	}
 
-	// ✅ Admin gửi noti cho toàn bộ user
+	// Admin gửi noti cho toàn bộ user
 	public void notifyAllUsers(String message) {
 		List<User> allUsers = userRepository.findAll();
 		createNotifications(allUsers, message);
 	}
 
-	// ✅ Trigger 1 - Gán user vào project
+	// Trigger 1 Gán user vào project
 	public void notifyProjectAssignment(String username, Integer projectId) {
 		Optional<Project> projectOpt = projectRepository.findById(projectId);
 		if (projectOpt.isEmpty())
@@ -70,7 +70,7 @@ public class NotificationService {
 		});
 	}
 
-	// ✅ Trigger 2 - Gán user vào task
+	// Trigger Gán user vào task
 	public void notifyTaskAssignment(Integer taskId, List<String> usernames) {
 		Optional<Task> taskOpt = taskRepository.findById(taskId);
 		if (taskOpt.isEmpty())
@@ -84,13 +84,13 @@ public class NotificationService {
 		}
 	}
 
-	// ✅ Trigger 3 - Task đổi trạng thái
+	// Trigger Task đổi trạng thái
 	public void notifyTaskStatusChanged(Task task, Task.Status oldStatus) {
 		String msg = "Task \"" + task.getName() + "\" đã đổi trạng thái từ " + oldStatus + " sang " + task.getStatus();
 		createNotifications(task.getAssignedUsers(), msg);
 	}
 
-	// ✅ Trigger 4 - Có comment mới
+	// Trigger 4 - Có comment mới
 	public void notifyCommentAdded(Task task, User author) {
 		String msg = author.getUsername() + " đã thêm 1 bình luận vào task: " + task.getName();
 		Set<User> users = new HashSet<>(task.getAssignedUsers());
@@ -98,7 +98,7 @@ public class NotificationService {
 		createNotifications(users, msg);
 	}
 
-	// ✅ Trigger 5 - Có file đính kèm mới
+	// Trigger 5 - Có file đính kèm mới
 	public void notifyAttachmentAdded(Task task, User uploader) {
 		String msg = uploader.getUsername() + " đã thêm 1 file vào task: " + task.getName();
 		Set<User> users = new HashSet<>(task.getAssignedUsers());
@@ -106,13 +106,13 @@ public class NotificationService {
 		createNotifications(users, msg);
 	}
 
-	// ✅ Lấy tất cả notification theo user
+	// Lấy tất cả notification theo user
 	public List<Notification> getNotifications(String username) {
 		Optional<User> userOpt = userRepository.findByUsername(username);
 		return userOpt.map(notificationRepository::findByUserOrderByCreatedAtDesc).orElse(Collections.emptyList());
 	}
 
-	// ✅ Đánh dấu là đã đọc
+	// Đánh dấu là đã đọc
 	@Transactional
 	public void markAsRead(Integer notificationId, String username) {
 		Notification noti = notificationRepository.findById(notificationId).orElseThrow();

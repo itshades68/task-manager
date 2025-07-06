@@ -7,22 +7,22 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "`notification`")
 public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+	@ManyToOne
+	@JoinColumn(name = "user_id", nullable = false)
+	private User user;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String message;
+	@Column(columnDefinition = "TEXT", nullable = false)
+	private String message;
 
-    @Column(name = "is_read")
-    private Boolean isRead = false;
+	@Column(name = "is_read")
+	private Boolean isRead = false;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+	@Column(name = "created_at")
+	private LocalDateTime createdAt = LocalDateTime.now();
 
 	public Notification() {
 		super();
@@ -76,6 +76,5 @@ public class Notification {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-    
-    
+
 }

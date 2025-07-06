@@ -8,27 +8,27 @@ import java.util.List;
 @Entity
 @Table(name = "`attachment`")
 public class Attachment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+	@ManyToOne
+	@JoinColumn(name = "task_id", nullable = false)
+	private Task task;
 
-    @Column(name = "file_name", nullable = false)
-    private String fileName;
+	@Column(name = "file_name", nullable = false)
+	private String fileName;
 
-    @Column(name = "file_path", nullable = false)
-    private String filePath;
+	@Column(name = "file_path", nullable = false)
+	private String filePath;
 
-    @ManyToOne
-    @JoinColumn(name = "uploaded_by", nullable = false)
-    private User uploadedBy;
+	@ManyToOne
+	@JoinColumn(name = "uploaded_by", nullable = false)
+	private User uploadedBy;
 
-    @Column(name = "uploaded_at")
-    private LocalDateTime uploadedAt = LocalDateTime.now();
-    
+	@Column(name = "uploaded_at")
+	private LocalDateTime uploadedAt = LocalDateTime.now();
+
 	public Attachment() {
 		super();
 	}
@@ -91,8 +91,5 @@ public class Attachment {
 	public void setUploadedAt(LocalDateTime uploadedAt) {
 		this.uploadedAt = uploadedAt;
 	}
-    
-    
+
 }
-
-

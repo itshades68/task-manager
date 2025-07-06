@@ -12,12 +12,10 @@ import java.util.List;
 
 @Service
 public class ProjectService {
-    private final ProjectRepository projectRepository;
+	private final ProjectRepository projectRepository;
 	private final ProjectMemberRepository projectMemberRepository;
 	private final TaskService taskService;
 	private final TaskRepository taskRepository;
-
-    
 
 	public ProjectService(ProjectRepository projectRepository, ProjectMemberRepository projectMemberRepository,
 			TaskService taskService, TaskRepository taskRepository) {
@@ -29,32 +27,32 @@ public class ProjectService {
 	}
 
 	public Project createProject(Project project) {
-        return projectRepository.save(project);
-    }
+		return projectRepository.save(project);
+	}
 
-    public Project updateProject(Integer id, Project updated) {
-        Project project = projectRepository.findById(id).orElseThrow();
-        project.setName(updated.getName());
-        project.setDescription(updated.getDescription());
-        return projectRepository.save(project);
-    }
+	public Project updateProject(Integer id, Project updated) {
+		Project project = projectRepository.findById(id).orElseThrow();
+		project.setName(updated.getName());
+		project.setDescription(updated.getDescription());
+		return projectRepository.save(project);
+	}
 
-    public void deleteProject(Integer projectId) {
-    	
-    	  List<Task> tasks = taskRepository.findByProjectId(projectId);
-    	  for (Task task : tasks) {
-    		  Integer taskId = task.getId();
-    	        taskService.deleteTask(taskId);
-    	    }
-        projectMemberRepository.deleteByProjectId(projectId);
-        projectRepository.deleteById(projectId);
-    }
+	public void deleteProject(Integer projectId) {
 
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
-    }
+		List<Task> tasks = taskRepository.findByProjectId(projectId);
+		for (Task task : tasks) {
+			Integer taskId = task.getId();
+			taskService.deleteTask(taskId);
+		}
+		projectMemberRepository.deleteByProjectId(projectId);
+		projectRepository.deleteById(projectId);
+	}
 
-    public Project getProjectById(Integer id) {
-        return projectRepository.findById(id).orElseThrow();
-    }
+	public List<Project> getAllProjects() {
+		return projectRepository.findAll();
+	}
+
+	public Project getProjectById(Integer id) {
+		return projectRepository.findById(id).orElseThrow();
+	}
 }

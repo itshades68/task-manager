@@ -7,11 +7,11 @@ import lombok.*;
 @IdClass(ProjectMemberId.class)
 @Table(name = "`projectmember`")
 public class ProjectMember {
-    @Id
-    private Integer projectId;
+	@Id
+	private Integer projectId;
 
-    @Id
-    private Integer userId;
+	@Id
+	private Integer userId;
 
 	public ProjectMember() {
 		super();
@@ -38,6 +38,5 @@ public class ProjectMember {
 	public void setUserId(Integer userId) {
 		this.userId = userId;
 	}
-    
-    
+
 }

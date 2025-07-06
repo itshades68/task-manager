@@ -17,101 +17,100 @@ import java.util.Map;
 @RequestMapping("/project-members")
 public class ProjectMemberController {
 
-    private final ProjectMemberService projectMemberService;
-    private final AuditLogService auditLogService;
-    private final UserRepository userRepository;
+	private final ProjectMemberService projectMemberService;
+	private final AuditLogService auditLogService;
+	private final UserRepository userRepository;
 
-    public ProjectMemberController(ProjectMemberService projectMemberService, AuditLogService auditLogService, UserRepository userRepository) {
-        this.projectMemberService = projectMemberService;
-        this.auditLogService = auditLogService;
-        this.userRepository = userRepository;
-    }
+	public ProjectMemberController(ProjectMemberService projectMemberService, AuditLogService auditLogService,
+			UserRepository userRepository) {
+		this.projectMemberService = projectMemberService;
+		this.auditLogService = auditLogService;
+		this.userRepository = userRepository;
+	}
 
-    // ADMIN thêm member vào project
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/add")
-    public ResponseEntity<?> addMember(@RequestBody Map<String, Object> body, Principal principal) {
-        Integer projectId = (Integer) body.get("projectId");
-        Integer userId = (Integer) body.get("userId");
+	// ADMIN thêm member vào project
+	@PreAuthorize("hasRole('ADMIN')")
+	@PostMapping("/add")
+	public ResponseEntity<?> addMember(@RequestBody Map<String, Object> body, Principal principal) {
+		Integer projectId = (Integer) body.get("projectId");
+		Integer userId = (Integer) body.get("userId");
 
-        if (projectId == null || userId == null) {
-            return ResponseEntity.badRequest().body("projectId và userId không được để trống");
-        }
+		if (projectId == null || userId == null) {
+			return ResponseEntity.badRequest().body("projectId và userId không được để trống");
+		}
 
-        ProjectMember member = projectMemberService.addMember(projectId, userId);
+		ProjectMember member = projectMemberService.addMember(projectId, userId);
 
-        String desc = "Thêm user ID " + userId + " vào project ID " + projectId;
-        auditLogService.log(principal.getName(), "CREATE", "ProjectMember", null, desc);
+		String desc = "Thêm user ID " + userId + " vào project ID " + projectId;
+		auditLogService.log(principal.getName(), "CREATE", "ProjectMember", null, desc);
 
-        return ResponseEntity.ok(member);
-    }
-    
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{projectId}")
-    public ResponseEntity<?> updateProjectMembers(
-            @PathVariable Integer projectId,
-            @RequestBody Map<String, List<Integer>> body,
-            Principal principal
-    ) {
-        List<Integer> userIds = body.get("userIds");
+		return ResponseEntity.ok(member);
+	}
 
-        if (userIds == null) {
-            return ResponseEntity.badRequest().body("Danh sách userIds không được để trống");
-        }
+	@PreAuthorize("hasRole('ADMIN')")
+	@PutMapping("/{projectId}")
+	public ResponseEntity<?> updateProjectMembers(@PathVariable Integer projectId,
+			@RequestBody Map<String, List<Integer>> body, Principal principal) {
+		List<Integer> userIds = body.get("userIds");
 
-        projectMemberService.updateMembers(projectId, userIds);
+		if (userIds == null) {
+			return ResponseEntity.badRequest().body("Danh sách userIds không được để trống");
+		}
 
-        String desc = "Cập nhật thành viên cho project ID " + projectId;
-        auditLogService.log(principal.getName(), "UPDATE", "ProjectMember", null, desc);
+		projectMemberService.updateMembers(projectId, userIds);
 
-        return ResponseEntity.ok().build();
-    }
+		String desc = "Cập nhật thành viên cho project ID " + projectId;
+		auditLogService.log(principal.getName(), "UPDATE", "ProjectMember", null, desc);
 
-    // ADMIN xoá member khỏi project
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/remove")
-    public ResponseEntity<?> removeMember(@RequestBody Map<String, Object> body, Principal principal) {
-        Integer projectId = (Integer) body.get("projectId");
-        Integer userId = (Integer) body.get("userId");
+		return ResponseEntity.ok().build();
+	}
 
-        if (projectId == null || userId == null) {
-            return ResponseEntity.badRequest().body("projectId và userId không được để trống");
-        }
+	// ADMIN xoá member khỏi project
+	@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping("/remove")
+	public ResponseEntity<?> removeMember(@RequestBody Map<String, Object> body, Principal principal) {
+		Integer projectId = (Integer) body.get("projectId");
+		Integer userId = (Integer) body.get("userId");
 
-        projectMemberService.removeMember(projectId, userId);
+		if (projectId == null || userId == null) {
+			return ResponseEntity.badRequest().body("projectId và userId không được để trống");
+		}
 
-        String desc = "Xoá user ID " + userId + " khỏi project ID " + projectId;
-        auditLogService.log(principal.getName(), "DELETE", "ProjectMember", null, desc);
+		projectMemberService.removeMember(projectId, userId);
 
-        return ResponseEntity.noContent().build();
-    }
+		String desc = "Xoá user ID " + userId + " khỏi project ID " + projectId;
+		auditLogService.log(principal.getName(), "DELETE", "ProjectMember", null, desc);
 
-    // ADMIN hoặc người trong project mới được xem danh sách thành viên của project
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/project/{projectId}")
-    public ResponseEntity<List<ProjectMember>> getMembersByProject(@PathVariable Integer projectId, Principal principal) {
-        User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+		return ResponseEntity.noContent().build();
+	}
 
-        if (!user.getRole().equals(User.Role.ADMIN)) {
-            boolean isInProject = projectMemberService.isUserInProject(projectId, user.getId());
-            if (!isInProject) {
-                return ResponseEntity.status(403).build();
-            }
-        }
+	// ADMIN hoặc người trong project mới được xem danh sách thành viên của project
+	@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+	@GetMapping("/project/{projectId}")
+	public ResponseEntity<List<ProjectMember>> getMembersByProject(@PathVariable Integer projectId,
+			Principal principal) {
+		User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-        return ResponseEntity.ok(projectMemberService.getMembersByProject(projectId));
-    }
+		if (!user.getRole().equals(User.Role.ADMIN)) {
+			boolean isInProject = projectMemberService.isUserInProject(projectId, user.getId());
+			if (!isInProject) {
+				return ResponseEntity.status(403).build();
+			}
+		}
 
-    // ADMIN hoặc chính user đó mới được xem danh sách project của user
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ProjectMember>> getProjectsByUser(@PathVariable Integer userId, Principal principal) {
-        User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+		return ResponseEntity.ok(projectMemberService.getMembersByProject(projectId));
+	}
 
-        if (!user.getRole().equals(User.Role.ADMIN) && !user.getId().equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
+	// ADMIN hoặc chính user đó mới được xem danh sách project của user
+	@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<List<ProjectMember>> getProjectsByUser(@PathVariable Integer userId, Principal principal) {
+		User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-        return ResponseEntity.ok(projectMemberService.getProjectsByUser(userId));
-    }
+		if (!user.getRole().equals(User.Role.ADMIN) && !user.getId().equals(userId)) {
+			return ResponseEntity.status(403).build();
+		}
+
+		return ResponseEntity.ok(projectMemberService.getProjectsByUser(userId));
+	}
 }

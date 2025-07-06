@@ -21,86 +21,81 @@ import java.util.List;
 @Service
 public class AttachmentService {
 
-    private final AttachmentRepository attachmentRepository;
-    private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
-    private final NotificationService notificationService;
-    private final String uploadDir = "uploads";
+	private final AttachmentRepository attachmentRepository;
+	private final TaskRepository taskRepository;
+	private final UserRepository userRepository;
+	private final NotificationService notificationService;
+	private final String uploadDir = "uploads";
 
-    public AttachmentService(AttachmentRepository attachmentRepository,
-                             TaskRepository taskRepository,
-                             UserRepository userRepository,
-                             NotificationService notificationService) {
-        this.attachmentRepository = attachmentRepository;
-        this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
-        this.notificationService = notificationService;
-    }
+	public AttachmentService(AttachmentRepository attachmentRepository, TaskRepository taskRepository,
+			UserRepository userRepository, NotificationService notificationService) {
+		this.attachmentRepository = attachmentRepository;
+		this.taskRepository = taskRepository;
+		this.userRepository = userRepository;
+		this.notificationService = notificationService;
+	}
 
-    public Attachment upload(Integer taskId, MultipartFile file, String username) {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+	public Attachment upload(Integer taskId, MultipartFile file, String username) {
+		Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Task not found"));
+		User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-        try {
-            Files.createDirectories(Paths.get(uploadDir));
-            String filePath = uploadDir + File.separator + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path path = Paths.get(filePath);
-            Files.write(path, file.getBytes());
+		try {
+			Files.createDirectories(Paths.get(uploadDir));
+			String filePath = uploadDir + File.separator + System.currentTimeMillis() + "_"
+					+ file.getOriginalFilename();
+			Path path = Paths.get(filePath);
+			Files.write(path, file.getBytes());
 
-            Attachment attachment = new Attachment();
-            attachment.setTask(task);
-            attachment.setUploadedBy(user);
-            attachment.setFileName(file.getOriginalFilename());
-            attachment.setFilePath(filePath);
+			Attachment attachment = new Attachment();
+			attachment.setTask(task);
+			attachment.setUploadedBy(user);
+			attachment.setFileName(file.getOriginalFilename());
+			attachment.setFilePath(filePath);
 
-            Attachment savedAttachment = attachmentRepository.save(attachment);
+			Attachment savedAttachment = attachmentRepository.save(attachment);
 
-            // Trigger: Notify assigned users
-            notificationService.notifyAttachmentAdded(task, user);
+			// Trigger: Notify assigned users
+			notificationService.notifyAttachmentAdded(task, user);
 
-            return savedAttachment;
+			return savedAttachment;
 
-        } catch (IOException e) {
-            throw new RuntimeException("File upload failed", e);
-        }
-    }
+		} catch (IOException e) {
+			throw new RuntimeException("File upload failed", e);
+		}
+	}
 
-    public List<Attachment> getByTask(Integer taskId) {
-        return attachmentRepository.findByTaskId(taskId);
-    }
+	public List<Attachment> getByTask(Integer taskId) {
+		return attachmentRepository.findByTaskId(taskId);
+	}
 
-    public Resource download(Integer id) {
-        Attachment attachment = attachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attachment not found"));
-        return new FileSystemResource(attachment.getFilePath());
-    }
+	public Resource download(Integer id) {
+		Attachment attachment = attachmentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Attachment not found"));
+		return new FileSystemResource(attachment.getFilePath());
+	}
 
-    public Attachment getMetadata(Integer id) {
-        return attachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attachment not found"));
-    }
+	public Attachment getMetadata(Integer id) {
+		return attachmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Attachment not found"));
+	}
 
-    public void deleteAttachment(Integer id, String username) {
-        Attachment attachment = attachmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attachment not found"));
+	public void deleteAttachment(Integer id, String username) {
+		Attachment attachment = attachmentRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Attachment not found"));
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+		User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean isAdmin = user.getRole() == User.Role.ADMIN;
-        boolean isUploader = attachment.getUploadedBy().getId().equals(user.getId());
+		boolean isAdmin = user.getRole() == User.Role.ADMIN;
+		boolean isUploader = attachment.getUploadedBy().getId().equals(user.getId());
 
-        if (!isAdmin && !isUploader) {
-            throw new RuntimeException("You are not authorized to delete this attachment.");
-        }
+		if (!isAdmin && !isUploader) {
+			throw new RuntimeException("You are not authorized to delete this attachment.");
+		}
 
-        File file = new File(attachment.getFilePath());
-        if (file.exists()) {
-            file.delete();
-        }
+		File file = new File(attachment.getFilePath());
+		if (file.exists()) {
+			file.delete();
+		}
 
-        attachmentRepository.delete(attachment);
-    }
+		attachmentRepository.delete(attachment);
+	}
 }

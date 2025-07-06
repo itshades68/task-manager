@@ -35,14 +35,14 @@ public class User {
 
 	@Column(name = "employee_id", unique = true, length = 50)
 	private String employeeId;
-	
+
 	@ManyToMany(mappedBy = "assignedUsers")
 	private Set<Task> tasks = new HashSet<>();
 
 	public User() {
 		super();
 	}
-	
+
 	@Builder
 	public User(Integer id, String username, String password, String fullName, Role role, LocalDateTime createdAt,
 			String employeeId) {
@@ -111,6 +111,5 @@ public class User {
 	public void setEmployeeId(String employeeId) {
 		this.employeeId = employeeId;
 	}
-	
-	
+
 }

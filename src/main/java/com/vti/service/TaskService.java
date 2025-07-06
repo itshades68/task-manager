@@ -24,129 +24,124 @@ import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
-    private final TaskRepository taskRepository;
-    private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
-    private final ProjectMemberService projectMemberService;
-    private final NotificationService notificationService;
-    private final CommentRepository commentRepository;
-    private final AttachmentRepository attachmentRepository;
-    private final CommentHistoryRepository commentHistoryRepository;
+	private final TaskRepository taskRepository;
+	private final ProjectRepository projectRepository;
+	private final UserRepository userRepository;
+	private final ProjectMemberService projectMemberService;
+	private final NotificationService notificationService;
+	private final CommentRepository commentRepository;
+	private final AttachmentRepository attachmentRepository;
+	private final CommentHistoryRepository commentHistoryRepository;
 
-    public TaskService(TaskRepository taskRepository,
-                       ProjectRepository projectRepository,
-                       UserRepository userRepository,
-                       ProjectMemberService projectMemberService,
-                       NotificationService notificationService,
-                       CommentRepository commentRepository,
-                       AttachmentRepository attachmentRepository,
-                       CommentHistoryRepository commentHistoryRepository) {
-        this.taskRepository = taskRepository;
-        this.projectRepository = projectRepository;
-        this.userRepository = userRepository;
-        this.projectMemberService = projectMemberService;
-        this.notificationService = notificationService;
-        this.commentRepository = commentRepository;
-        this.attachmentRepository = attachmentRepository;
-        this.commentHistoryRepository = commentHistoryRepository;
-    }
+	public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository,
+			UserRepository userRepository, ProjectMemberService projectMemberService,
+			NotificationService notificationService, CommentRepository commentRepository,
+			AttachmentRepository attachmentRepository, CommentHistoryRepository commentHistoryRepository) {
+		this.taskRepository = taskRepository;
+		this.projectRepository = projectRepository;
+		this.userRepository = userRepository;
+		this.projectMemberService = projectMemberService;
+		this.notificationService = notificationService;
+		this.commentRepository = commentRepository;
+		this.attachmentRepository = attachmentRepository;
+		this.commentHistoryRepository = commentHistoryRepository;
+	}
 
-    public Task createTask(Task task) {
-        Task savedTask = taskRepository.save(task);
-        List<String> usernames = task.getAssignedUsers().stream().map(User::getUsername).toList();
-        notificationService.notifyTaskAssignment(savedTask.getId(), usernames);
-        return savedTask;
-    }
+	public Task createTask(Task task) {
+		Task savedTask = taskRepository.save(task);
+		List<String> usernames = task.getAssignedUsers().stream().map(User::getUsername).toList();
+		notificationService.notifyTaskAssignment(savedTask.getId(), usernames);
+		return savedTask;
+	}
 
-    public Task updateTask(Integer taskId, Task updatedTask) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
+	public Task updateTask(Integer taskId, Task updatedTask) {
+		Task task = taskRepository.findById(taskId).orElseThrow();
 
-        Task.Status oldStatus = task.getStatus();
-        Set<User> oldUsers = new HashSet<>(task.getAssignedUsers());
+		Task.Status oldStatus = task.getStatus();
+		Set<User> oldUsers = new HashSet<>(task.getAssignedUsers());
 
-        task.setName(updatedTask.getName());
-        task.setDescription(updatedTask.getDescription());
-        task.setDeadline(updatedTask.getDeadline());
-        task.setStatus(updatedTask.getStatus());
-        task.setProject(updatedTask.getProject());
-        task.setAssignedUsers(updatedTask.getAssignedUsers());
+		task.setName(updatedTask.getName());
+		task.setDescription(updatedTask.getDescription());
+		task.setDeadline(updatedTask.getDeadline());
+		task.setStatus(updatedTask.getStatus());
+		task.setProject(updatedTask.getProject());
+		task.setAssignedUsers(updatedTask.getAssignedUsers());
 
-        Task savedTask = taskRepository.save(task);
+		Task savedTask = taskRepository.save(task);
 
-        if (!oldStatus.equals(updatedTask.getStatus())) {
-            notificationService.notifyTaskStatusChanged(task, oldStatus);
-        }
+		if (!oldStatus.equals(updatedTask.getStatus())) {
+			notificationService.notifyTaskStatusChanged(task, oldStatus);
+		}
 
-        Set<User> newUsers = new HashSet<>(updatedTask.getAssignedUsers());
-        newUsers.removeAll(oldUsers);
-        List<String> newUsernames = newUsers.stream().map(User::getUsername).toList();
-        if (!newUsernames.isEmpty()) {
-            notificationService.notifyTaskAssignment(taskId, newUsernames);
-        }
+		Set<User> newUsers = new HashSet<>(updatedTask.getAssignedUsers());
+		newUsers.removeAll(oldUsers);
+		List<String> newUsernames = newUsers.stream().map(User::getUsername).toList();
+		if (!newUsernames.isEmpty()) {
+			notificationService.notifyTaskAssignment(taskId, newUsernames);
+		}
 
-        return savedTask;
-    }
+		return savedTask;
+	}
 
-    @Transactional
-    public void deleteTask(Integer taskId) {
-    	
-    	List<Comment> comments = commentRepository.findByTaskId(taskId);
-        for (Comment comment : comments) {
-            commentHistoryRepository.deleteByCommentId(comment.getId());
-        }
-        // Xoá comment trước
-        commentRepository.deleteByTaskId(taskId);
-        attachmentRepository.deleteByTaskId(taskId);
+	@Transactional
+	public void deleteTask(Integer taskId) {
 
-        // Sau đó xoá task
-        taskRepository.deleteById(taskId);
-    }
+		List<Comment> comments = commentRepository.findByTaskId(taskId);
+		for (Comment comment : comments) {
+			commentHistoryRepository.deleteByCommentId(comment.getId());
+		}
+		// Xoá comment trước
+		commentRepository.deleteByTaskId(taskId);
+		attachmentRepository.deleteByTaskId(taskId);
 
-    public List<Task> getTasksByProject(Integer projectId) {
-        Project project = projectRepository.findById(projectId).orElseThrow();
-        return taskRepository.findByProject(project);
-    }
+		// Sau đó xoá task
+		taskRepository.deleteById(taskId);
+	}
 
-    public List<Task> getTasksAssignedToUser(User user) {
-        return taskRepository.findByAssignedUsersContaining(user);
-    }
+	public List<Task> getTasksByProject(Integer projectId) {
+		Project project = projectRepository.findById(projectId).orElseThrow();
+		return taskRepository.findByProject(project);
+	}
 
-    public Task updateStatus(Integer taskId, Task.Status status, String username) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
-        User user = userRepository.findByUsername(username).orElseThrow();
+	public List<Task> getTasksAssignedToUser(User user) {
+		return taskRepository.findByAssignedUsersContaining(user);
+	}
 
-        if (!task.getAssignedUsers().contains(user)) {
-            throw new SecurityException("Không có quyền cập nhật task này");
-        }
+	public Task updateStatus(Integer taskId, Task.Status status, String username) {
+		Task task = taskRepository.findById(taskId).orElseThrow();
+		User user = userRepository.findByUsername(username).orElseThrow();
 
-        Task.Status oldStatus = task.getStatus();
-        task.setStatus(status);
-        Task savedTask = taskRepository.save(task);
-        if (!oldStatus.equals(status)) {
-            notificationService.notifyTaskStatusChanged(savedTask, oldStatus);
-        }
-        return savedTask;
-    }
-    
-    public Task getTaskById(Integer id) {
-        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task không tồn tại"));
-        return task;
-    }
-    @Transactional
-    public Task assignUsers(Integer taskId, List<Integer> userIds) {
-        Task task = taskRepository.findById(taskId).orElseThrow();
+		if (!task.getAssignedUsers().contains(user)) {
+			throw new SecurityException("Không có quyền cập nhật task này");
+		}
 
-        Set<User> users = userIds.stream()
-                .map(id -> userRepository.findById(id).orElseThrow())
-                .collect(Collectors.toSet());
+		Task.Status oldStatus = task.getStatus();
+		task.setStatus(status);
+		Task savedTask = taskRepository.save(task);
+		if (!oldStatus.equals(status)) {
+			notificationService.notifyTaskStatusChanged(savedTask, oldStatus);
+		}
+		return savedTask;
+	}
 
-        task.setAssignedUsers(users);
+	public Task getTaskById(Integer id) {
+		Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task không tồn tại"));
+		return task;
+	}
 
-        // Gửi thông báo
-        List<String> usernames = users.stream().map(User::getUsername).toList();
-        notificationService.notifyTaskAssignment(task.getId(), usernames);
-        
+	@Transactional
+	public Task assignUsers(Integer taskId, List<Integer> userIds) {
+		Task task = taskRepository.findById(taskId).orElseThrow();
 
-        return taskRepository.save(task);
-    }
+		Set<User> users = userIds.stream().map(id -> userRepository.findById(id).orElseThrow())
+				.collect(Collectors.toSet());
+
+		task.setAssignedUsers(users);
+
+		// Gửi thông báo
+		List<String> usernames = users.stream().map(User::getUsername).toList();
+		notificationService.notifyTaskAssignment(task.getId(), usernames);
+
+		return taskRepository.save(task);
+	}
 }

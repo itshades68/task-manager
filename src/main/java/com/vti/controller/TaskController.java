@@ -33,7 +33,7 @@ public class TaskController {
 	private final TaskRepository taskRepository;
 
 	public TaskController(TaskService taskService, UserRepository userRepository, ProjectRepository projectRepository,
-			ProjectMemberService projectMemberService, AuditLogService auditLogService, TaskRepository taskRepository ) {
+			ProjectMemberService projectMemberService, AuditLogService auditLogService, TaskRepository taskRepository) {
 		this.taskService = taskService;
 		this.userRepository = userRepository;
 		this.projectRepository = projectRepository;
@@ -105,16 +105,16 @@ public class TaskController {
 
 	@GetMapping("/{id}")
 	public ResponseEntity<Task> getTaskById(@PathVariable Integer id, Principal principal) {
-	    Task task = taskService.getTaskById(id);
-	    User user = userRepository.findByUsername(principal.getName()).orElseThrow();
+		Task task = taskService.getTaskById(id);
+		User user = userRepository.findByUsername(principal.getName()).orElseThrow();
 
-	    boolean isAdmin = user.getRole().equals(User.Role.ADMIN);
-	    boolean isAssigned = task.getAssignedUsers().contains(user);
-	    if (!isAdmin && !isAssigned) {
-	        return ResponseEntity.status(403).body(null);
-	    }
+		boolean isAdmin = user.getRole().equals(User.Role.ADMIN);
+		boolean isAssigned = task.getAssignedUsers().contains(user);
+		if (!isAdmin && !isAssigned) {
+			return ResponseEntity.status(403).body(null);
+		}
 
-	    return ResponseEntity.ok(task);
+		return ResponseEntity.ok(task);
 	}
 
 	@PreAuthorize("hasRole('ADMIN')")
@@ -131,69 +131,68 @@ public class TaskController {
 	}
 
 	private Task parseTaskFromRequest(Map<String, Object> request) {
-	    Object idObj = request.get("id");
-	    Task task;
+		Object idObj = request.get("id");
+		Task task;
 
-	    if (idObj != null) {
-	        Integer id;
-	        if (idObj instanceof Number) {
-	            id = ((Number) idObj).intValue();
-	        } else if (idObj instanceof String) {
-	            id = Integer.parseInt((String) idObj);
-	        } else {
-	            throw new IllegalArgumentException("Id không hợp lệ");
-	        }
+		if (idObj != null) {
+			Integer id;
+			if (idObj instanceof Number) {
+				id = ((Number) idObj).intValue();
+			} else if (idObj instanceof String) {
+				id = Integer.parseInt((String) idObj);
+			} else {
+				throw new IllegalArgumentException("Id không hợp lệ");
+			}
 
-	        task = taskRepository.findById(id)
-	                .orElseThrow(() -> new RuntimeException("Không tìm thấy task với id = " + id));
-	    } else {
-	        task = new Task();
-	    }
+			task = taskRepository.findById(id)
+					.orElseThrow(() -> new RuntimeException("Không tìm thấy task với id = " + id));
+		} else {
+			task = new Task();
+		}
 
-	    // Gán project
-	    Integer projectId;
-	    Object projectIdObj = request.get("projectId");
-	    if (projectIdObj instanceof Number) {
-	        projectId = ((Number) projectIdObj).intValue();
-	    } else if (projectIdObj instanceof String) {
-	        projectId = Integer.parseInt((String) projectIdObj);
-	    } else {
-	        throw new IllegalArgumentException("projectId không hợp lệ");
-	    }
-	    Project project = projectRepository.findById(projectId)
-	            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy project với id = " + projectId));
-	    task.setProject(project);
+		// Gán project
+		Integer projectId;
+		Object projectIdObj = request.get("projectId");
+		if (projectIdObj instanceof Number) {
+			projectId = ((Number) projectIdObj).intValue();
+		} else if (projectIdObj instanceof String) {
+			projectId = Integer.parseInt((String) projectIdObj);
+		} else {
+			throw new IllegalArgumentException("projectId không hợp lệ");
+		}
+		Project project = projectRepository.findById(projectId)
+				.orElseThrow(() -> new IllegalArgumentException("Không tìm thấy project với id = " + projectId));
+		task.setProject(project);
 
-	    // Gán các field cơ bản
-	    task.setName((String) request.get("name"));
-	    task.setDescription((String) request.get("description"));
-	    String deadlineStr = (String) request.get("deadline");
-	    if (deadlineStr != null && !deadlineStr.isBlank()) {
-	        task.setDeadline(LocalDate.parse(deadlineStr));
-	    }
-	 // Gán status nếu có
-	    if (request.containsKey("status")) {
-	        Object statusObj = request.get("status");
-	        if (statusObj != null) {
-	            try {
-	                task.setStatus(Status.valueOf(statusObj.toString()));
-	            } catch (IllegalArgumentException e) {
-	                throw new IllegalArgumentException("Giá trị status không hợp lệ: " + statusObj);
-	            }
-	        }
-	    }
+		// Gán các field cơ bản
+		task.setName((String) request.get("name"));
+		task.setDescription((String) request.get("description"));
+		String deadlineStr = (String) request.get("deadline");
+		if (deadlineStr != null && !deadlineStr.isBlank()) {
+			task.setDeadline(LocalDate.parse(deadlineStr));
+		}
+		// Gán status nếu có
+		if (request.containsKey("status")) {
+			Object statusObj = request.get("status");
+			if (statusObj != null) {
+				try {
+					task.setStatus(Status.valueOf(statusObj.toString()));
+				} catch (IllegalArgumentException e) {
+					throw new IllegalArgumentException("Giá trị status không hợp lệ: " + statusObj);
+				}
+			}
+		}
 
+		// Gán danh sách assignedUsers nếu có
+		if (request.containsKey("assignedUsers")) {
+			List<Integer> userIds = (List<Integer>) request.get("assignedUsers");
+			Set<User> users = userIds.stream()
+					.map(uid -> userRepository.findById(uid)
+							.orElseThrow(() -> new IllegalArgumentException("Không tìm thấy user với id = " + uid)))
+					.collect(Collectors.toSet());
+			task.setAssignedUsers(users);
+		}
 
-	    // Gán danh sách assignedUsers nếu có
-	    if (request.containsKey("assignedUsers")) {
-	        List<Integer> userIds = (List<Integer>) request.get("assignedUsers");
-	        Set<User> users = userIds.stream()
-	            .map(uid -> userRepository.findById(uid)
-	                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy user với id = " + uid)))
-	            .collect(Collectors.toSet());
-	        task.setAssignedUsers(users);
-	    }
-
-	    return task;
+		return task;
 	}
 }

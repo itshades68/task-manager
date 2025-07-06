@@ -24,11 +24,9 @@ public class CommentController {
 		this.auditLogService = auditLogService;
 	}
 
-	// ✅ Thêm comment vào task (ai cũng dùng được)
 	@PostMapping("/task/{taskId}")
-	public ResponseEntity<Comment> createComment(@PathVariable Integer taskId,
-												 @RequestBody Map<String, String> request,
-												 Principal principal) {
+	public ResponseEntity<Comment> createComment(@PathVariable Integer taskId, @RequestBody Map<String, String> request,
+			Principal principal) {
 		String content = request.get("content");
 		Comment comment = commentService.createComment(taskId, content, principal.getName());
 
@@ -38,13 +36,11 @@ public class CommentController {
 		return ResponseEntity.ok(comment);
 	}
 
-	// ✅ Lấy tất cả comment của task (ai cũng dùng được)
 	@GetMapping("/task/{taskId}")
 	public ResponseEntity<List<Comment>> getCommentsByTask(@PathVariable Integer taskId) {
 		return ResponseEntity.ok(commentService.getCommentsByTask(taskId));
 	}
 
-	// ✅ Chỉ ADMIN được xoá comment
 	@PreAuthorize("hasRole('ADMIN')")
 	@DeleteMapping("/{commentId}")
 	public ResponseEntity<Void> deleteComment(@PathVariable Integer commentId, Principal principal) {
@@ -59,8 +55,7 @@ public class CommentController {
 	// ✅ ADMIN hoặc NGƯỜI TẠO được sửa comment
 	@PatchMapping("/{commentId}")
 	public ResponseEntity<Comment> updateComment(@PathVariable Integer commentId,
-												 @RequestBody Map<String, String> request,
-												 Principal principal) {
+			@RequestBody Map<String, String> request, Principal principal) {
 		String newContent = request.get("content");
 		Comment updated = commentService.updateComment(commentId, newContent, principal.getName());
 

@@ -16,40 +16,37 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtTokenProvider jwtTokenProvider;
+	private final JwtTokenProvider jwtTokenProvider;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+		this.jwtTokenProvider = jwtTokenProvider;
+	}
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        if ("/auth/login".equals(path)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+		String path = request.getRequestURI();
+		if ("/auth/login".equals(path)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            if (jwtTokenProvider.validateToken(token)) {
-                String username = jwtTokenProvider.getUsernameFromToken(token);
-                List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+		String header = request.getHeader("Authorization");
+		if (header != null && header.startsWith("Bearer ")) {
+			String token = header.substring(7);
+			if (jwtTokenProvider.validateToken(token)) {
+				String username = jwtTokenProvider.getUsernameFromToken(token);
+				List<String> roles = jwtTokenProvider.getRolesFromToken(token);
 
-                var authorities = roles.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .toList();
+				var authorities = roles.stream().map(SimpleGrantedAuthority::new).toList();
 
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        username, null, authorities);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-        }
+				var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+		}
 
-        filterChain.doFilter(request, response);
-    }
+		filterChain.doFilter(request, response);
+	}
 }

@@ -9,15 +9,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Integer> {
-    List<Task> findByProject(Project project);
+	List<Task> findByProject(Project project);
 
-    // Tìm tất cả task mà user được phân công
-    List<Task> findByAssignedUsersContaining(User user);
+	List<Task> findByAssignedUsersContaining(User user);
 
-    // Tìm task theo project và user được phân công
-    List<Task> findByProjectAndAssignedUsersContaining(Project project, User user);
-    
-    Optional<Task> findById(Integer id);
+	List<Task> findByProjectAndAssignedUsersContaining(Project project, User user);
+
+	Optional<Task> findById(Integer id);
 
 	List<Task> findByProjectId(Integer projectId);
 }

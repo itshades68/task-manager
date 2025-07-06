@@ -8,23 +8,23 @@ import java.util.List;
 @Entity
 @Table(name = "`project`")
 public class Project {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @Column(nullable = false, length = 100)
-    private String name;
+	@Column(nullable = false, length = 100)
+	private String name;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+	@Column(columnDefinition = "TEXT")
+	private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+	@ManyToOne
+	@JoinColumn(name = "created_by", nullable = false)
+	private User createdBy;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
-    
+	@Column(name = "created_at")
+	private LocalDateTime createdAt = LocalDateTime.now();
+
 	public Project() {
 		super();
 	}
@@ -77,6 +77,5 @@ public class Project {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-    
-    
+
 }
