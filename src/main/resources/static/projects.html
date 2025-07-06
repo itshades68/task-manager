@@ -10,8 +10,9 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-light px-4">
     <span class="navbar-brand fw-bold" id="currentUsername"></span>
     <div class="ms-auto d-flex align-items-center gap-3">
-      <button onclick="window.location.href = 'dashboard.html'" id="btnDashboard" class="btn btn-outline-secondary btn-sm d-none">Dashboard</button>
+      <button onclick="window.location.href = 'dashboard.html'" id="btnDashboard" class="btn btn-outline-secondary d-none">Dashboard</button>
       <button id="btnCreateProject" class="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#createProjectModal">Tạo dự án mới</button>
+	  <button onclick="window.location.href = 'login.html'" class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
       <div id="notificationIcon" class="position-relative cursor-pointer">
         <img src="assets/bell.png" width="24" height="24" alt="Thông báo">
         <span id="notiBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning d-none">!</span>
