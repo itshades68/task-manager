@@ -234,6 +234,7 @@ function saveTaskEdit() {
 	const name = $("#editTaskName").val().trim();
 	const description = $("#editTaskDesc").val().trim();
 	const deadline = $("#editTaskDeadline").val();
+	const projectId = window.projectIdOfTask;
 
 	$.ajax({
 		url: `${API_BASE_URL}/tasks/${taskId}`,
@@ -243,10 +244,11 @@ function saveTaskEdit() {
 			"Content-Type": "application/json",
 		},
 		data: JSON.stringify({
-			id: taskId, // THÊM DÒNG NÀY
+			id: taskId,
 			name,
 			description,
-			deadline
+			deadline,
+			projectId
 		}),
 		success: () => {
 			loadTaskDetail();
